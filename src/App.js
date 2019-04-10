@@ -5,6 +5,10 @@ import * as ml5 from 'ml5'
 
 class App extends Component {
   image = tiger
+  apis = {
+    picsum: 'https://picsum.photos/800/?random',
+    unsplash_animal: 'https://source.unsplash.com/800x800/?animal,animals,pets'
+  }
 
   constructor() {
     super()
@@ -22,8 +26,8 @@ class App extends Component {
   }
 
   classifyImg = () => {
-    //intitialize the  Image Classifier (with MobileNet?):
-    const classifier = ml5.imageClassifier('MobileNet', () => {
+    //intitialize the  Image Classifier (using pre-trained Darknet ML model):
+    const classifier = ml5.imageClassifier('Darknet', () => {
       //when the model is loaded
       console.log('Model loaded bro')
     })
@@ -32,6 +36,9 @@ class App extends Component {
     //make a specified ncount of 5 predictions with the selected image
     classifier
       .predict(image, 5, (err, results) => {
+        if (err) {
+          alert(err)
+        }
         console.log(results)
       })
       .then(results => this.setPredictions(results))
@@ -49,7 +56,7 @@ class App extends Component {
       predictions: [],
       message: `Loading image classification....`
     })
-    fetch('https://picsum.photos/800/?random').then(response => {
+    fetch(this.apis.picsum).then(response => {
       document.getElementById('image').src = response.url
       this.classifyImg()
     })
