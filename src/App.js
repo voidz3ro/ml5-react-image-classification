@@ -5,19 +5,28 @@ import * as ml5 from 'ml5'
 
 class App extends Component {
   image = tiger
-  apis = {
-    picsum: 'https://picsum.photos/800/?random',
-    unsplash_animal: 'https://source.unsplash.com/800x800/?animal,animals,pets'
-  }
 
   constructor() {
     super()
     this.state = {
       message: `Loading image classification....`,
-      predictions: []
+      predictions: [],
+      searchTerm: 'animal,animals,pets'
+    }
+
+    this.state = {
+      ...this.state,
+      apis: {
+        picsum: 'https://picsum.photos/800/?random',
+        unsplash: `https://source.unsplash.com/800x800/?${
+          this.state.searchTerm
+        }`
+      }
     }
     this.setPredictions = this.setPredictions.bind(this)
     this.loadNewImage = this.loadNewImage.bind(this)
+    this.handleChange = this.handleChange.bind(this)
+    this.textBlur = this.textBlur.bind(this)
   }
 
   componentDidMount() {
@@ -27,7 +36,7 @@ class App extends Component {
 
   classifyImg = () => {
     //intitialize the  Image Classifier (using pre-trained Darknet ML model):
-    const classifier = ml5.imageClassifier('Darknet', () => {
+    const classifier = ml5.imageClassifier('MobileNet', () => {
       //when the model is loaded
       console.log('Model loaded bro')
     })
@@ -56,10 +65,34 @@ class App extends Component {
       predictions: [],
       message: `Loading image classification....`
     })
-    fetch(this.apis.picsum).then(response => {
+    fetch(this.state.apis.unsplash).then(response => {
       document.getElementById('image').src = response.url
       this.classifyImg()
     })
+  }
+
+  handleChange(e) {
+    const val = e.target.value
+    const name = e.target.name
+    this.setState(prevState => {
+      return {
+        [name]: val,
+        apis: {
+          ...prevState.apis,
+          unsplash: `https://source.unsplash.com/800x800/?${val}`
+        }
+      }
+    })
+  }
+
+  textFocus(e) {
+    e.target.value = ''
+  }
+
+  textBlur(e) {
+    if (e.target.value === '') {
+      e.target.value = this.state[e.target.name]
+    }
   }
 
   render() {
@@ -76,7 +109,7 @@ class App extends Component {
           </p>
         )
       })
-      _button = <button onClick={this.loadNewImage}>Try something else</button>
+      _button = <button onClick={this.loadNewImage}>Check another image</button>
     }
 
     return (
@@ -84,7 +117,21 @@ class App extends Component {
         <h1>{this.state.message}</h1>
         <div className="predictions-container">
           <div className="predictions">{_predictions}</div>
-          {_button}
+          <div>
+            <div>
+              <label htmlFor="searchTerm">Image category:</label>
+              <input
+                type="text"
+                name="searchTerm"
+                placeholder="Enter image category"
+                value={this.state.searchTerm}
+                onChange={this.handleChange}
+                onFocus={this.textFocus}
+                onBlur={this.textBlur}
+              />
+            </div>
+            <div>{_button}</div>
+          </div>
         </div>
         <img
           src={this.image}
