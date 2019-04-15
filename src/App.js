@@ -11,7 +11,8 @@ class App extends Component {
     this.state = {
       message: `Loading image classification....`,
       predictions: [],
-      searchTerm: 'animal,animals,pets'
+      searchTerm: 'animal,animals,pets',
+      imageSrc: null
     }
 
     this.state = {
@@ -31,7 +32,7 @@ class App extends Component {
 
   componentDidMount() {
     //once we've mounted classify image
-    this.classifyImg()
+    this.loadNewImage();
   }
 
   classifyImg = () => {
@@ -41,7 +42,7 @@ class App extends Component {
       console.log('Model loaded bro')
     })
     // get a var ref to the image..... (can we not just use the react ref?)
-    const image = document.getElementById('image')
+    const  image = document.getElementById('image')
     //make a specified ncount of 5 predictions with the selected image
     classifier
       .predict(image, 5, (err, results) => {
@@ -65,10 +66,26 @@ class App extends Component {
       predictions: [],
       message: `Loading image classification....`
     })
-    fetch(this.state.apis.unsplash).then(response => {
-      document.getElementById('image').src = response.url
-      this.classifyImg()
-    })
+    fetch(this.state.apis.unsplash)
+      .then(response => this.setState({
+        imageSrc : response.url
+      }))
+      
+      .then(this.classifyImg())
+      //.then(this.watchForImageLoad() )
+  }
+
+  watchForImageLoad() {
+    if(!document.getElementById('image').complete)
+    {
+      console.log('image not complete, delaying classification...')
+      setTimeout(this.watchForImageLoad(), 500)
+
+    }else{
+      console.log('image complete. classifying....')
+      setTimeout(this.classifyImg(),  1000)
+      
+    }
   }
 
   handleChange(e) {
@@ -134,7 +151,7 @@ class App extends Component {
           </div>
         </div>
         <img
-          src={this.image}
+          src={this.state.imageSrc}
           id="image"
           width="800"
           alt="RAAWWRRR"
